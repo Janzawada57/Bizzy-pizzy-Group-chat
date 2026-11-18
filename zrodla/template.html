@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, interactive-widget=resizes-content">
+<meta name="theme-color" content="#0f1418">
+<meta name="referrer" content="no-referrer">
+<title>groupchat</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#0f1418; --panel:#161d23; --panel2:#1d262e; --line:#26313b;
+  --text:#e7edf2; --muted:#8a99a6; --accent:#2fbf9b; --accent2:#1f8f74;
+  --mine:#1f5e52; --theirs:#1f2830; --danger:#e5534b; --warn:#d9a23b;
+  --r:14px; --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);
+  font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overscroll-behavior:none}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none}
+.hidden{display:none!important}
+.screen{position:fixed;inset:0;display:flex;flex-direction:column;padding-top:var(--safe-t)}
+header.bar{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel);border-bottom:1px solid var(--line);min-height:56px}
+header.bar h1{font-size:19px;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+header.bar .sub{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logo{font-weight:800;letter-spacing:-.3px}
+.logo b{color:var(--accent)}
+.ibtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-size:20px;flex:none}
+.ibtn:active{background:var(--panel2)}
+.chip{display:flex;align-items:center;gap:8px;background:var(--panel2);border-radius:20px;padding:5px 12px 5px 5px;font-size:14px;max-width:55vw}
+.chip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:15px;flex:none;color:#0b0f12}
+.av.big{width:46px;height:46px;font-size:19px}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tabs{display:flex;background:var(--panel);border-bottom:1px solid var(--line)}
+.tabs button{flex:1;padding:12px 0;color:var(--muted);font-weight:600;border-bottom:3px solid transparent}
+.tabs button.on{color:var(--text);border-color:var(--accent)}
+.item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.item:active{background:var(--panel)}
+.item .mid{flex:1;min-width:0}
+.item .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.item .s{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.badge{background:var(--accent);color:#06231c;border-radius:12px;min-width:22px;height:22px;padding:0 6px;font-size:12.5px;font-weight:700;display:grid;place-items:center}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--accent);margin-right:5px;vertical-align:middle}
+.empty{padding:40px 24px;text-align:center;color:var(--muted)}
+.empty .big{font-size:44px;margin-bottom:8px}
+.fab{position:fixed;right:18px;bottom:calc(18px + var(--safe-b));background:var(--accent);color:#06231c;font-weight:700;border-radius:28px;padding:15px 20px;box-shadow:0 6px 20px #0008;font-size:15.5px}
+.btn{display:block;width:100%;padding:13px 16px;border-radius:12px;background:var(--accent);color:#06231c;font-weight:700;text-align:center;text-decoration:none;margin-top:10px}
+.btn.sec{background:var(--panel2);color:var(--text)}
+.btn.danger{background:transparent;color:var(--danger);border:1px solid #e5534b55}
+.btn:disabled{opacity:.5}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+label.f{display:block;font-size:13px;color:var(--muted);margin:14px 0 6px}
+input.in,textarea.in,select.in{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px;outline:none}
+input.in:focus,textarea.in:focus{border-color:var(--accent)}
+.num{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:1px}
+.hint{font-size:13px;color:var(--muted);margin-top:8px}
+.warn{font-size:13px;color:var(--warn);margin-top:8px}
+.kod{font-family:ui-monospace,Menlo,Consolas,monospace;background:var(--panel2);padding:2px 7px;border-radius:6px;font-size:13px}
+/* onboarding */
+#onb .wrap{max-width:440px;margin:0 auto;padding:28px 22px calc(28px + var(--safe-b))}
+#onb .hero{font-size:34px;font-weight:800;letter-spacing:-.5px;margin:10px 0 4px}
+#onb .hero b{color:var(--accent)}
+.bignum{display:flex;gap:8px;align-items:center}
+.bignum input{font-size:28px;text-align:center;font-weight:700}
+/* notices */
+.notice{margin:10px 12px 0;background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px}
+.notice .t{font-weight:600}
+.notice .row{margin-top:8px}
+.notice .btn{margin-top:0;padding:10px}
+/* chat */
+#msgs{padding:10px 10px 6px;display:flex;flex-direction:column;gap:3px}
+.msg{max-width:82%;padding:7px 10px 5px;border-radius:14px;background:var(--theirs);align-self:flex-start;word-wrap:break-word;overflow-wrap:anywhere;white-space:pre-wrap}
+.msg.mine{align-self:flex-end;background:var(--mine)}
+.msg .who{font-size:12.5px;font-weight:700;margin-bottom:2px}
+.msg .meta{font-size:11px;color:#ffffff80;text-align:right;margin-top:2px}
+.msg img,.msg video{display:block;max-width:100%;max-height:340px;border-radius:10px;margin:2px 0;background:#000}
+.msg a{color:#7fe3c9}
+.msg.sys{align-self:center;background:none;color:var(--muted);font-size:12.5px;padding:3px 8px;text-align:center}
+.prog{height:3px;background:#ffffff22;border-radius:2px;margin-top:4px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent);width:0}
+#typing{font-size:12.5px;color:var(--muted);padding:0 14px;height:18px}
+.composer{display:flex;align-items:flex-end;gap:6px;padding:8px 8px calc(8px + var(--safe-b));background:var(--panel);border-top:1px solid var(--line)}
+.composer textarea{flex:1;resize:none;max-height:130px;background:var(--bg);border:1px solid var(--line);border-radius:20px;padding:9px 14px;outline:none;line-height:1.35}
+.send{background:var(--accent);color:#06231c;font-size:18px}
+/* sheet */
+#sheetBg{position:fixed;inset:0;background:#0009;z-index:20}
+#sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--panel);border-radius:18px 18px 0 0;max-height:90vh;display:flex;flex-direction:column;padding-bottom:var(--safe-b);max-width:560px;margin:0 auto}
+#sheet .hd{display:flex;align-items:center;padding:12px 8px 6px 18px}
+#sheet .hd h2{flex:1;font-size:18px;margin:0}
+#sheet .bd{overflow-y:auto;padding:0 18px 18px}
+.opt{display:flex;align-items:center;gap:12px;padding:14px 4px;border-bottom:1px solid var(--line);width:100%;text-align:left}
+.opt .e{font-size:22px;width:30px;text-align:center}
+.check{display:flex;align-items:center;gap:12px;padding:10px 2px;border-bottom:1px solid var(--line)}
+.check input{width:22px;height:22px;accent-color:var(--accent)}
+/* call */
+#call{position:fixed;inset:0;z-index:30;background:#05080a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:var(--safe-t) 0 var(--safe-b)}
+#remoteV{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;background:#05080a}
+#localV{position:absolute;right:14px;top:calc(14px + var(--safe-t));width:28vw;max-width:150px;border-radius:12px;background:#111;object-fit:cover;transform:scaleX(-1);z-index:2}
+#call .info{position:relative;z-index:2;text-align:center;text-shadow:0 1px 6px #000}
+#call .info .n{font-size:28px;font-weight:700;margin-top:10px}
+#call .info .s{color:#c9d4dc;margin-top:6px}
+#call .info.mini{position:absolute;top:calc(18px + var(--safe-t));left:16px;text-align:left}
+#call .info.mini .av{display:none}
+#call .info.mini .n{font-size:18px;margin:0}
+#call .ctl{position:absolute;bottom:calc(30px + var(--safe-b));left:0;right:0;display:flex;justify-content:center;gap:16px;z-index:2}
+#call .ctl button{width:62px;height:62px;border-radius:50%;background:#ffffff26;font-size:25px;backdrop-filter:blur(6px)}
+#call .ctl button.off{background:#fff;color:#000}
+#call .ctl .red{background:var(--danger)}
+#call .ctl .green{background:#2fbf6b}
+#lockBar{background:var(--panel);border-top:1px solid var(--line);padding:14px 16px calc(14px + var(--safe-b));max-height:75vh;overflow-y:auto}
+#lockBar h3{margin:0 0 4px;font-size:17px}
+.step{display:flex;gap:12px;padding:9px 0;border-bottom:1px dashed var(--line);align-items:flex-start}
+.step .n{flex:none;width:26px;height:26px;border-radius:50%;background:var(--panel2);display:grid;place-items:center;font-weight:700;font-size:14px}
+.step.on .n{background:var(--accent);color:#06231c}
+.step .b{flex:1;min-width:0}
+.step .btn{margin-top:8px;padding:10px}
+.codebig{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:30px;font-weight:800;letter-spacing:2px;text-align:center;background:var(--bg);border:1px dashed var(--accent);border-radius:12px;padding:12px 6px;margin-top:8px;user-select:all}
+
+.codeboxes{display:flex;gap:6px;margin-top:8px}
+.codeboxes input{flex:1;min-width:0;text-align:center;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:24px;font-weight:700;letter-spacing:3px;padding:10px 2px}
+.codeboxes input[readonly]{border-style:dashed;border-color:var(--accent);background:var(--bg)}
+input.codein{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:24px;letter-spacing:2px;text-align:center}
+.cb{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--muted);margin-top:10px}
+.cb input{width:18px;height:18px;accent-color:var(--accent)}
+#call .sas{margin-top:14px;background:#000a;border:1px solid #2fbf9b88;border-radius:12px;padding:8px 14px;font-size:14px}
+#call .sas b{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:22px;letter-spacing:2px;color:#7fe3c9;display:block}
+#call .info.mini .sas{margin-top:6px;padding:5px 10px;font-size:12px}
+#call .info.mini .sas b{font-size:17px}
+#callBanner{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 12px;background:#1f5e52;font-size:14px}
+#grid{position:absolute;inset:0;display:grid;gap:6px;padding:calc(64px + var(--safe-t)) 6px calc(110px + var(--safe-b));align-content:center;z-index:1}
+#grid .tile{position:relative;background:#111a20;border-radius:14px;overflow:hidden;aspect-ratio:3/4;display:grid;place-items:center;min-height:0}
+#grid .tile video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0}
+#grid .tile.vid video{opacity:1}
+#grid .tile .nm{position:absolute;left:8px;bottom:6px;font-size:13px;background:#0009;padding:2px 8px;border-radius:8px}
+.msg .ask{font-size:12px;margin-top:3px;text-align:right;color:#ffffffb0}
+.msg .lnk{color:#a8f0dc;font-size:12px;padding:2px 2px;text-decoration:underline}
+.msg .lnk.yes{color:#ffd27a;font-weight:700}
+.msg.expiring{outline:1px dashed #ffd27a66}
+body.privacy #home,body.privacy #chat{filter:blur(18px)}
+#viewer{position:fixed;inset:0;background:#000e;z-index:40;display:grid;place-items:center}
+#viewer img{max-width:100%;max-height:100%}
+#toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(90px + var(--safe-b));background:#2a353f;padding:10px 16px;border-radius:12px;z-index:50;max-width:88vw;font-size:14.5px;box-shadow:0 6px 20px #0008;text-align:center}
+</style>
+</head>
+<body>
+
+<!-- Pierwsze uruchomienie -->
+<section id="onb" class="screen hidden"><div class="scroll"><div class="wrap">
+  <div class="hero">group<b>chat</b></div>
+  <div class="hint" style="font-size:15px">Szyfrowany czat peer-to-peer. Bez kont, bez serwera z wiadomościami, bez numeru telefonu.</div>
+  <label class="f">Twój numer groupchat (1–10 cyfr)</label>
+  <div class="bignum"><input id="onbNum" class="in num" inputmode="numeric" maxlength="10" autocomplete="off"><button class="ibtn" id="onbDice" title="Losuj">🎲</button></div>
+  <div class="hint">Wylosowaliśmy numer – możesz go zmienić na własny. To nie jest numer telefonu. Wysyłasz go znajomym SMS-em, żeby mogli cię dodać.</div>
+  <label class="f">Nick</label>
+  <input id="onbNick" class="in" maxlength="32" placeholder="np. Kuba" autocomplete="off">
+  <button class="btn" id="onbGo">Zaczynamy</button>
+</div></div></section>
+
+<!-- PIN -->
+<section id="pin" class="screen hidden"><div class="scroll"><div class="wrap" style="max-width:360px;margin:0 auto;padding:60px 22px;text-align:center">
+  <div class="logo" style="font-size:34px">group<b>chat</b></div>
+  <div style="font-size:44px;margin:24px 0 8px">🔒</div>
+  <div class="hint" style="font-size:15px">Wpisz PIN, żeby odszyfrować dane</div>
+  <input id="pinIn" class="in num" type="password" inputmode="numeric" autocomplete="current-password" style="font-size:28px;text-align:center;margin-top:18px;letter-spacing:6px">
+  <button class="btn" id="pinGo">Odblokuj</button>
+  <div class="hint" id="pinMsg" style="min-height:20px"></div>
+</div></div></section>
+
+<!-- Ekran główny -->
+<section id="home" class="screen hidden">
+  <header class="bar">
+    <div class="logo" style="font-size:20px;flex:1">group<b>chat</b></div>
+    <button class="chip" id="meChip"><div class="av" id="meAv"></div><span id="meLbl"></span></button>
+  </header>
+  <div class="tabs"><button id="tabChats" class="on">Czaty</button><button id="tabContacts">Kontakty</button></div>
+  <div class="scroll" id="homeScroll">
+    <div id="notices"></div>
+    <div id="chatList"></div>
+    <div id="contactList" class="hidden"></div>
+    <div style="height:90px"></div>
+  </div>
+  <button class="fab" id="fab">＋ Nowa grupa</button>
+</section>
+
+<!-- Czat -->
+<section id="chat" class="screen hidden">
+  <header class="bar">
+    <button class="ibtn" id="chatBack">←</button>
+    <div style="flex:1;min-width:0" id="chatHead"><h1 id="chatName"></h1><div class="sub" id="chatSub"></div></div>
+    <button class="ibtn" id="chatLock" title="Kod rozmowy">🔐</button>
+    <button class="ibtn" id="chatCall" title="Zadzwoń">📞</button>
+    <button class="ibtn" id="chatMembers" title="Osoby i ustawienia">👥</button>
+  </header>
+  <div id="callBanner" class="hidden"></div>
+  <div class="scroll" id="msgScroll"><div id="msgs"></div></div>
+  <div id="lockBar" class="hidden"></div>
+  <div id="typing"></div>
+  <div class="composer" id="composer">
+    <button class="ibtn" id="attach" title="Zdjęcie / filmik">📎</button>
+    <textarea id="txt" rows="1" placeholder="Wiadomość" maxlength="4000"></textarea>
+    <button class="ibtn send" id="sendBtn">➤</button>
+  </div>
+  <input type="file" id="fGallery" accept="image/*,video/*" class="hidden">
+  <input type="file" id="fPhoto" accept="image/*" capture="environment" class="hidden">
+  <input type="file" id="fVideo" accept="video/*" capture="environment" class="hidden">
+</section>
+
+<!-- Arkusz / okno -->
+<div id="sheetBg" class="hidden"></div>
+<div id="sheet" class="hidden"><div class="hd"><h2 id="sheetT"></h2><button class="ibtn" id="sheetX">✕</button></div><div class="bd" id="sheetB"></div></div>
+
+<!-- Rozmowa -->
+<div id="call" class="hidden">
+  <video id="remoteV" autoplay playsinline></video>
+  <div id="grid" class="hidden"></div>
+  <video id="localV" autoplay playsinline muted class="hidden"></video>
+  <div class="info"><div class="av big" id="callAv" style="margin:0 auto;width:96px;height:96px;font-size:40px"></div><div class="n" id="callName"></div><div class="s" id="callStatus"></div><div class="sas hidden" id="callSas"></div></div>
+  <div class="ctl" id="callCtl"></div>
+</div>
+
+<div id="viewer" class="hidden"><img id="viewerImg" alt=""></div>
+<div id="toast" class="hidden"></div>
+
+<script type="module">
+/*__APP__*/
+</script>
+</body>
+</html>
